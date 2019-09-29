@@ -1,0 +1,318 @@
+# target_version:
+#   rubocop v0.74.0
+require:
+  - rubocop-performance
+
+# 自動生成されるものはチェック対象から除外する
+AllCops:
+  Exclude:
+    - "vendor/**/*" # rubocop config/default.yml
+    - "db/schema.rb"
+  DisplayCopNames: true
+
+##################### Style ##################################
+
+# redirect_to xxx and return のイディオムを維持したい
+Style/AndOr:
+  EnforcedStyle: conditionals
+
+# 日本語のコメントを許可する
+Style/AsciiComments:
+  Enabled: false
+
+# It's too strict.
+Style/CommentAnnotation:
+  Enabled: false
+
+# option 等、明示的にハッシュにした方が分かりやすい場合もある
+Style/BracesAroundHashParameters:
+  Enabled: false
+
+# Allow A::B
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+# Style/CollectionMethods 自体は無効になっているのだが、
+#   https://github.com/bbatsov/rubocop/issues/1084
+#   https://github.com/bbatsov/rubocop/issues/1334
+# Performance/Detect がこの設定値を見るので PreferredMethods だけ変更しておく。
+#
+# デフォルト値から変えたのは
+#   find -> detect
+#     ActiveRecord の find と間違えやすいため
+#   reduce -> inject
+#     detect, reject, select と並べたときに韻を踏んでいるため。
+#     collect -> map を維持しているのは文字数が圧倒的に少ないため。
+Style/CollectionMethods:
+  PreferredMethods:
+    detect: "detect"
+    find: "detect"
+    inject: "inject"
+    reduce: "inject"
+
+# Hash#has_key? は許可したい
+Style/PreferredHashMethods:
+  Enabled: false
+
+# ドキュメントの無い public class を許可する
+Style/Documentation:
+  Enabled: false
+
+# !! のイディオムは積極的に使う
+Style/DoubleNegation:
+  Enabled: false
+
+# 複数行に渡るメソッドチェーンは行末に . を置かずに次行を . で始める
+# Pros
+#   - ブロックが始まったと誤認しない
+#   - `.method(...)` がセットなので、差分や編集操作が分かりやすい
+#   - メソッド名が `and`/`or` などの場合に予約語と誤認せずに済む
+# Cons
+#   - REPL に複数行貼り付けると1行目で完結してしまう
+#   - 長い行だったり画面最下行だったりすると次行に続くことに気づかない
+Layout/DotPosition:
+  EnforcedStyle: leading
+
+# 明示的に else で nil を返すのは分かりやすいので許可する
+Style/EmptyElse:
+  EnforcedStyle: empty
+
+# デフォルトでは揃えないが、揃えてあるものは直さない
+# ただ、Rubocopは文字幅でなく文字数で見るので、日本語文字列をキーとするハッシュのalign判定を誤る
+# その場合はマジックコメントで Layout/SpaceAroundOperators とこれを抑制して対応する
+Layout/AlignHash:
+  EnforcedColonStyle:
+    - key
+    - table
+  EnforcedHashRocketStyle:
+    - key
+    - table
+
+# 桁揃えが綺麗にならないことが多いので migration は除外
+Layout/ExtraSpacing:
+  Exclude:
+    - "db/migrate/*.rb"
+
+# いずれかに揃えるのならば `sprintf` や `format` より String#% が好きです
+Style/FormatString:
+  EnforcedStyle: percent
+
+# rake タスクの順序の hash は rocket を許可する
+Style/HashSyntax:
+  Exclude:
+    - "**/*.rake"
+    - "Rakefile"
+
+# 条件式の方を意識させたい場合には後置の if/unless を使わない方が分かりやすい
+Style/IfUnlessModifier:
+  Enabled: false
+
+# def...end unless method_defined?(...) みたいなときは後置の方がすっきりする
+Style/MultilineIfModifier:
+  Enabled: false
+
+# ({ と hash を開始した場合に ( の位置にインデントさせる
+# そもそも {} が必要ない可能性が高いが Style/BracesAroundHashParameters はチェックしないことにしたので
+Layout/IndentFirstHashElement:
+  EnforcedStyle: consistent
+
+Layout/IndentationConsistency:
+  EnforcedStyle: normal
+
+# scope 等は複数行でも lambda ではなく ->{} で揃えた方が見た目が綺麗
+Style/Lambda:
+  Enabled: false
+
+# 1_000_000 と区切り文字が 2 個以上必要になる場合のみ _ 区切りを必須にする
+Style/NumericLiterals:
+  MinDigits: 7
+
+# has_ から始まるメソッドは許可する
+Naming/PredicateName:
+  NamePrefixBlacklist:
+    - "is_"
+    - "have_"
+  NamePrefix:
+    - "is_"
+    - "have_"
+
+# メッセージを並置したいのは分かるが、 raise ActiveRecord::RecordInvalid, record には抵抗がある
+# 揃えるなら raise Exception.new(arg) スタイルがいい
+Style/RaiseArgs:
+  Enabled: true
+  EnforcedStyle: compact
+
+# 特に model 内において、ローカル変数とメソッド呼び出しの区別をつけた方が分かりやすい場合が多い
+Style/RedundantSelf:
+  Enabled: false
+
+# 受け取り側で multiple assignment しろというのを明示
+Style/RedundantReturn:
+  AllowMultipleReturnValues: true
+
+# fail と使い分ける必要ナシ
+Style/SignalException:
+  EnforcedStyle: only_raise
+
+# `||` も align に使うことがあるので追加する
+Layout/SpaceAroundOperators:
+  AllowForAlignment:
+    - "="
+    - "=>"
+    - "||"
+
+Layout/MultilineOperationIndentation:
+  EnforcedStyle: indented
+
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+
+# * 式展開したい場合に書き換えるのが面倒
+# * 文章ではダブルクォートよりもシングルクォートの方が頻出する
+# ことから EnforcedStyle: double_quotes 推奨
+Style/StringLiterals:
+  Enabled: false
+
+# auto-correct 時に Style/StringLiterals とカニバって無限ループになる (v0.28.0)
+Style/StringLiteralsInInterpolation:
+  Enabled: false
+
+# いくらなんでも inject { |a, e| } は短すぎるので分かりやすい名前をつけたい
+Style/SingleLineBlockParams:
+  Enabled: false
+
+# Allow both style
+Style/BlockDelimiters:
+  Enabled: false
+
+# * migrate
+# * model の association
+# * controller の callback
+# 辺りの桁揃えで引っかかるので全体的にチェックしない
+Layout/SpaceBeforeFirstArg:
+  Enabled: false
+
+# Allow good old slashs: s/foo/bar/g
+Style/RegexpLiteral:
+  Enabled: false
+
+# This seems to be broken
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Style/MultilineBlockChain:
+  Enabled: false
+##################### Lint ##################################
+
+# * 同名のメソッドがある場合にローカル変数に `_` を付ける
+# * 一時数として `_` を付ける
+# というテクニックは頻出する
+Lint/UnderscorePrefixedVariableName:
+  Enabled: false
+
+# 子クラスで実装させるつもりのメソッドで引っかかるので
+Lint/UnusedMethodArgument:
+  Enabled: false
+
+# Okay.
+Lint/HandleExceptions:
+  Enabled: false
+
+# Ruby本体も警告を廃止している
+Lint/ShadowingOuterLocalVariable:
+  Enabled: false
+
+##################### Metrics ##################################
+
+# 30 まではギリギリ許せる範囲だった
+Metrics/AbcSize:
+  Max: 30
+
+# 6 は強すぎるので緩める
+Metrics/CyclomaticComplexity:
+  Max: 10
+
+# * 警告 120文字
+# * 禁止 160文字
+# のイメージ
+Metrics/LineLength:
+  Max: 160
+  Exclude:
+    - "db/migrate/*.rb"
+
+# 20 行超えるのは migration ファイル以外滅多に無い
+Metrics/MethodLength:
+  Max: 20
+  Exclude:
+    - "db/migrate/*.rb"
+
+# 分岐の数。ガード句を多用しているとデフォルト 7 だと厳しい
+Metrics/PerceivedComplexity:
+  Max: 8
+
+Performance/TimesMap:
+  Enabled: false
+
+Naming/VariableNumber:
+  Enabled: false
+
+Style/EmptyMethod:
+  Enabled: false
+
+Style/EmptyCaseCondition:
+  Enabled: false
+
+Style/GuardClause:
+  Enabled: false
+
+Style/AccessModifierDeclarations:
+  Enabled: false
+
+Layout/AlignParameters:
+  EnforcedStyle: with_fixed_indentation
+
+Layout/ClosingParenthesisIndentation:
+  Enabled: true
+
+Style/SymbolArray:
+  Enabled: false
+
+Lint/AmbiguousOperator:
+  Enabled: false
+
+Lint/UnneededSplatExpansion:
+  Enabled: false
+
+# require 'English' が必要になるのに追加してくれないので無効化
+# 個別にやるのは面倒だしまとめてやるのではコードの再利用性を損なう
+# 一般的に馴染みのあるものしか使わないはず: $`/$', $0, $$, $? 等
+Style/SpecialGlobalVars:
+  Enabled: false
+
+# $1 を Regexp.last_match[1] にしても長いだけ
+Style/PerlBackrefs:
+  Enabled: false
+
+# Inline privateで壊れる
+# https://github.com/bbatsov/rubocop/issues/5641
+Style/TrivialAccessors:
+  Enabled: false
+
+Layout/EndAlignment:
+  EnforcedStyleAlignWith: keyword
+  AutoCorrect: true
+  Enabled: true
+
+Layout/MultilineAssignmentLayout:
+  EnforcedStyle: same_line
+  AutoCorrect: true
+  Enabled: true
+
+Bundler/OrderedGems:
+  AutoCorrect: true
+
+Style/WordArray:
+  AutoCorrect: false
+
+Style/TrailingCommaInArguments:
+  Enabled: false
