@@ -7,13 +7,13 @@ x-app: &app
     args:
       RUBY_VERSION: '2.6.3'
       PG_MAJOR: '11'
-      NODE_MAJOR: '11'
-      YARN_VERSION: '1.13.0'
+      NODE_MAJOR: '12'
+      YARN_VERSION: '1.16.0'
       BUNDLER_VERSION: '2.0.2'
   environment: &env
     NODE_ENV: development
     RAILS_ENV: ${RAILS_ENV:-development}
-  image: example-dev:1.0.0
+  image: app-dev:1.0.0
   tmpfs:
     - /tmp
 
@@ -43,22 +43,11 @@ x-backend: &backend
     - redis
 
 services:
-  runner:
-    <<: *backend
-    command: /bin/bash
-    ports:
-      - '3000:3000'
-      - '3002:3002'
-
   rails:
     <<: *backend
     command: bundle exec rails server -b 0.0.0.0
     ports:
       - '3000:3000'
-
-        # sidekiq:
-        #   <<: *backend
-        #   command: bundle exec sidekiq -C config/sidekiq.yml
 
   postgres:
     image: postgres:11.1
