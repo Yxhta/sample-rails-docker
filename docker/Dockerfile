@@ -1,3 +1,4 @@
+# ここでバージョンを指定していないのは、docker-compose.ymlの方で指定するため
 ARG RUBY_VERSION
 FROM ruby:$RUBY_VERSION
 
